@@ -1,0 +1,80 @@
+services:
+  market-backend:
+    build:
+      context: ./market-backend
+      dockerfile: Dockerfile
+    container_name: market-intelligence-backend
+    environment:
+      BACKEND_HOST: "0.0.0.0"
+      BACKEND_PORT: "8000"
+      BACKEND_INTERNAL_API_KEY: "${MCP_BACKEND_INTERNAL_API_KEY:-dev-backend-internal-key}"
+      BACKEND_JWT_SECRET: "${MCP_INTERNAL_JWT_SECRET:-dev-internal-jwt-secret-must-be-at-least-32-bytes}"
+    expose:
+      - "8000"
+    networks:
+      - internal_net
+
+  mcp-server:
+    build:
+      context: ./market-intelligence-mcp
+      dockerfile: Dockerfile
+    container_name: market-intelligence-mcp
+    environment:
+      MCP_HOST: "0.0.0.0"
+      MCP_PORT: "8080"
+      MCP_BACKEND_BASE_URL: "http://market-backend:8000"
+      MCP_BACKEND_INTERNAL_API_KEY: "${MCP_BACKEND_INTERNAL_API_KEY:-dev-backend-internal-key}"
+      MCP_INTERNAL_API_KEY: "${MCP_INTERNAL_API_KEY:-dev-gateway-internal-key}"
+      MCP_INTERNAL_JWT_SECRET: "${MCP_INTERNAL_JWT_SECRET:-dev-internal-jwt-secret-must-be-at-least-32-bytes}"
+      MCP_ALLOWED_HOSTS: '["localhost:*","127.0.0.1:*","mcp-server:8080","mcp-server"]'
+      MCP_ALLOWED_ORIGINS: '["http://localhost:*","http://127.0.0.1:*"]'
+    expose:
+      - "8080"
+    depends_on:
+      - market-backend
+    networks:
+      - internal_net
+
+  ai-orchestrator:
+    build:
+      context: ./ai-orchestrator
+      dockerfile: Dockerfile
+    container_name: market-ai-orchestrator
+    environment:
+      ORCH_HOST: "0.0.0.0"
+      ORCH_PORT: "8001"
+      ORCH_MCP_URL: "http://mcp-server:8080/mcp"
+      ORCH_MCP_HEALTH_URL: "http://mcp-server:8080/health/ready"
+      ORCH_INTERNAL_API_KEY: "${MCP_INTERNAL_API_KEY:-dev-gateway-internal-key}"
+      ORCH_JWT_SECRET: "${MCP_INTERNAL_JWT_SECRET:-dev-internal-jwt-secret-must-be-at-least-32-bytes}"
+      ORCH_OPENAI_API_KEY: "${ORCH_OPENAI_API_KEY:-}"
+    ports:
+      - "8001:8001"
+    depends_on:
+      - mcp-server
+    networks:
+      - internal_net
+      - edge_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        ORCHESTRATOR_INTERNAL_URL: "http://ai-orchestrator:8001"
+    container_name: market-intelligence-frontend
+    environment:
+      ORCHESTRATOR_INTERNAL_URL: "http://ai-orchestrator:8001"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - ai-orchestrator
+    networks:
+      - edge_net
+
+networks:
+  internal_net:
+    driver: bridge
+    internal: true
+  edge_net:
+    driver: bridge

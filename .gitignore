@@ -17,10 +17,23 @@ venv/
 .coverage
 htmlcov/
 
+# Node / Next.js frontend artifacts
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/tsconfig.tsbuildinfo
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
 # Local secrets & environment files
 .env
 .env.*
 !.env.example
+!**/.env.example
 
 # OS / IDE noise
 .DS_Store

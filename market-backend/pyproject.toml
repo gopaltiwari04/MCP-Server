@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "market-intelligence-backend"
+version = "1.0.0"
+description = "Internal FastAPI Market Intelligence & Quantitative Domain Service"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "pyjwt[crypto]>=2.9.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
