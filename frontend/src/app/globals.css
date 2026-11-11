@@ -1,15 +1,52 @@
 @import "tailwindcss";
 
+@theme inline {
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 :root {
   color-scheme: dark;
+  --surface-canvas: #08090c;
+  --surface-panel: #0e1015;
+  --surface-elevated: #14171f;
+  --border-hairline: #1e222d;
+  --border-strong: #2c3140;
+  --accent-signal: #f59e0b;
 }
 
 body {
-  background-color: #080c14;
-  color: #e2e8f0;
+  background-color: var(--surface-canvas);
+  color: #e6e8ee;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+.terminal-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Subtle dark scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0c10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #252a36;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a4154;
 }
