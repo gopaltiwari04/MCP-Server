@@ -1,0 +1,51 @@
+# Caddy v2 Reverse Proxy Configuration for Market Intelligence MCP Server
+# Provides automatic HTTPS/TLS termination and zero-buffering SSE / Streamable HTTP support.
+
+{
+	email platform-ops@example.com
+}
+
+mcp.example.com {
+	encode {
+		# Do not compress Server-Sent Events or streaming MCP responses
+		match {
+			header Content-Type application/json*
+		}
+		gzip
+	}
+
+	# MCP Streamable HTTP endpoint (/mcp) — SSE streaming + JSON-RPC
+	@mcp_stream {
+		path /mcp /mcp/*
+	}
+	handle @mcp_stream {
+		reverse_proxy mcp-server:8080 {
+			flush_interval -1
+			stream_timeout 3600s
+			stream_close_delay 5m
+
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	# OAuth 2.1 Protected Resource Metadata (RFC 9728)
+	handle /.well-known/oauth-protected-resource* {
+		reverse_proxy mcp-server:8080 {
+			header_up Host {host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	# Health probes (restrict /health/ready externally in production if desired)
+	handle /health/* {
+		reverse_proxy mcp-server:8080
+	}
+
+	# Default deny unknown paths
+	handle {
+		respond "Not Found" 404
+	}
+}

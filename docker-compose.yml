@@ -1,0 +1,68 @@
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: market-intelligence-mcp
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MCP_HOST: "0.0.0.0"
+      MCP_PORT: "8080"
+      MCP_LOG_FORMAT: "json"
+    expose:
+      - "8080"
+    networks:
+      - internal_net
+      - edge_net
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/live', timeout=3).read()",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: market-intelligence-edge-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    networks:
+      - edge_net
+
+networks:
+  # Private backend network: FastAPI Market Intelligence backend attaches here
+  # (never exposed to edge_net or host ports directly).
+  internal_net:
+    driver: bridge
+    internal: true
+  # Edge network connecting reverse proxy to mcp-server only.
+  edge_net:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

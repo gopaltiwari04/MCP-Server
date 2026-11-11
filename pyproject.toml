@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "market-intelligence-mcp"
+version = "1.0.0"
+description = "Production-grade Zero-Trust MCP Protocol Gateway for Market Intelligence & Quantitative Analytics"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [
+    { name = "Quantitative Platform Engineering" },
+]
+dependencies = [
+    "mcp[cli]==2.3.0",
+    "pydantic>=2.9,<3.0",
+    "pydantic-settings>=2.6,<3.0",
+    "httpx>=0.27,<1.0",
+    "uvicorn>=0.32",
+    "starlette>=0.41",
+    "tenacity>=9.0",
+    "cachetools>=5.5",
+    "structlog>=24.4",
+    "pyjwt[crypto]>=2.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "respx>=0.22",
+    "ruff>=0.8",
+]
+
+[project.scripts]
+market-intelligence-mcp = "app.main:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "ignore::mcp.shared.exceptions.MCPDeprecationWarning",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["B008"]
